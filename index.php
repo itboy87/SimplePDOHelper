@@ -64,7 +64,7 @@ $updateResult = $pdo->update($table_name,$updateValues, $condition);
 $deleteResult = $pdo->delete($table_name, $condition);
 
 echo "<i>update_result: " . ($updateResult ? "TRUE" : "FALSE") . "</i><br>";
-echo "<i>delete_result: " . ($deleteResult ? "TRUE" : "FALSE") . "</i>";
+echo "<i>delete_result: " . ($deleteResult ? "TRUE" : "FALSE") . "</i><br>";
 echo "<i>insert_result: " . ($insertResult ? "TRUE" : "FALSE") . "</i>";
 
 
