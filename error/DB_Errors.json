@@ -1,0 +1,1 @@
+{"query":"UPDATE test SET username = ?,pass = ? WHERE username = ? and email = ? LIMIT 1","extra":{"where":"username = ? and email = ? LIMIT 1","value":["itboy","my@email.com"]},"msg":"where clause '?' parameters not equal given values"}
