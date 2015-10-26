@@ -10,7 +10,34 @@ It include following main functions `insert`, `update`, `delete`, `select`, `beg
 * Secured Prepared statements
 * Can use direct values or bind them
 * Can set PDO data type of value and its length
+* Chain method calling
 
+#New Feature: 'TableData'
+ * Now more easy and simple just write what need  
+ * New functions `insertTD`, `updateTD`, `deleteTD`.
+ * Idea about TableData comes into my mind from Android's ContentValues
+ * Chain method supported
+ 
+````php
+ $TD = new TableData($table_name);
+ $TD->putDirectParam("time", "NOW()")
+     ->putBindParam("username", "itboy87")
+     ->putBindParam("email", "itboy@mail.com")
+     ->putBindParam("password", "myPass", PDO::PARAM_STR, 5)
+     ->putBindParam("user_active", 0, PDO::PARAM_INT);
+ 
+ //condition
+ //insertTD don't need condition
+ $TD->setCondition("WHERE username = ? && password = ?")
+     ->putConditionBindValue(1, "itboy87")
+     ->putConditionBindValue(2, "myPass");
+     
+ //insert, update and delete
+  $pdo->insertTD($TD);   
+  $pdo->updateTD($TD));  
+  $pdo->deleteTD($TD));
+  
+```
 
 #How use?
 ###Create class of PDOHelper Class
