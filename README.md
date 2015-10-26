@@ -1,6 +1,6 @@
 # SimplePDOHelper
-PDOHelper class is easy to use and reduce size of biolerplate queries.
-It include following main functions `insert`, `udpate`, `delete`, `select`, `beginTransaction`, `endTransaction` and more.
+PDOHelper class is easy to use and reduce size of boilerplate code.
+It include following main functions `insert`, `update`, `delete`, `select`, `beginTransaction`, `endTransaction` and more.
 
 #Why PDOHelper?
 
@@ -27,7 +27,7 @@ simple insert query with two parameters
 $pdo->insert($table_name, $tableData);
 ```
 ```php
-//values of $bind_values will bind in prepared statment with '?'
+//values of $bind_values will bind in prepared statement with '?'
 // column_name    => "column_value"
 //"username"      => "itboy",
 $bind_values = array(
@@ -35,7 +35,7 @@ $bind_values = array(
     "email"         => "my@mail.com",                      //simple value
 );
 $tableData = array(
-    "?" => $bind_values,          //values of $bind_values will bind in prepared statment with '?'                          
+    "?" => $bind_values,          //values of $bind_values will bind in prepared statement with '?'                          
     "time" => "NOW()"             //this value will include direct into query
 );
 ```  
@@ -56,7 +56,7 @@ $bind_values = array(
     "user_active"   => array(1, PDO::PARAM_INT)             // this column is type of BIT(1) and will bind with int type
 );
 $tableData = array(
-    "?"         => $bind_values,              //values of $bind_values will bind in prepared statment                          
+    "?"         => $bind_values,              //values of $bind_values will bind in prepared statement                          
     "time"      => "NOW()"                   //this value will include direct into query
     "email"     => "'my@mail.com'"          //this value will include direct into query
 );
@@ -72,7 +72,7 @@ $query = INSERT INTO TABLE_NAME (username, user_active, time, email)` VALUES (?,
 ```
 
 ###Update Row
-Update function have one additional variable `$condition` and it is nullable.  
+Update function have one additional variable `$condition` and it is NullAble.
 `$tableData` and `$bind_values` includes column and values same as in insert.  
 ```php
 $pdo->update($table_name,$updateValues, $condition);
@@ -126,7 +126,7 @@ $deleteResult = $pdo->delete($table_name, $condition);
 Nothing special in Select just make it little simple look at  
 ```php
 $query = "SELECT * FROM user WHERE username=? and pass=?;
-$params = array('itboy', 'mypass');
+$params = array('itboy', 'myPass');
 $result = $pdo->select($query, $params, PDO::FETCH_ASSOC)
 ```
 
