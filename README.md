@@ -17,8 +17,15 @@ It include following main functions `insert`, `update`, `delete`, `select`, `beg
  * New functions `insertTD`, `updateTD`, `deleteTD`.
  * Idea about TableData comes into my mind from Android's ContentValues
  * Chain method supported
+ * *putDirectParam* directly insert value into database
+ * *putBindParam* bind the value with prepared statement
  
 ````php
+//@Syntax
+//putDirectParam(column_name, column_value, PDO_DATA_TYPE, LENGTH);
+//putBindParam same as putDirectParam
+//3 and 4 parameters are option
+
  $TD = new TableData($table_name);
  $TD->putDirectParam("time", "NOW()")
      ->putBindParam("username", "itboy87")
