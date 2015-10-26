@@ -53,76 +53,6 @@ class PDOHelper
     }
 
     /**
-     * @param $table
-     * @param array $tableValues
-     * @param  $condition
-     * @return int
-     */
-    public function update($table, array $tableValues, $condition)
-    {
-        $result = 0;
-
-        //Create prepare statement from keys of values
-        $query = $this->createUpdatePreparedQuery($table, $tableValues);
-
-        //get column values to bind
-        //later these column values array will merge with where clause bind values if available
-        $parameters = $this->getQueryParamsToBind($tableValues);
-
-
-        $query .= $this->extractWhereClause($condition);
-
-        //both arrays contain only values which will bind
-        //merge column values and condition values
-        $parameters = array_merge($parameters, $this->getQueryParamsToBind($condition));
-
-        $stmt = $this->db->prepare($query);
-        $this->bindParameters($stmt, $parameters);
-        try {
-            /*
-                        var_dump($query);
-                        var_dump($parameters);
-                        die();
-            */
-
-            $stmt->execute();
-            $result = $stmt->rowCount();
-
-            //if error then exception will be thrown
-            //If same data updated then rowCount return 0
-        } catch (\PDOException $e) {
-            $this->handle_sql_error($query, $e);
-        }
-
-        return $result;
-    }
-
-    /**
-     * @param string $table
-     * @param $condition
-     * @return int
-     */
-    public function delete($table, $condition)
-    {
-        $result = 0;
-        $query = "DELETE FROM " . $table;
-        $query .= $this->extractWhereClause($condition);
-        $values = $this->getQueryParamsToBind($condition);
-
-        $stmt = $this->db->prepare($query);
-        $this->bindParameters($stmt, $values);
-
-        try {
-            $stmt->execute();
-            $result = $stmt->rowCount();
-        } catch (\PDOException $e) {
-            $this->handle_sql_error($query, $e);
-        }
-
-        return $result;
-    }
-
-    /**
      * @param $table_name
      * @param $values
      * @return string
@@ -182,71 +112,85 @@ class PDOHelper
         }
     }
 
-
-    public function beginTransaction($owner = "")
+    /**
+     * @param PDOStatement $stmt
+     * @param array $values
+     */
+    private function bindParameters(PDOStatement $stmt, array $values)
     {
-        if ($this->isTransactionRunning()) {
-            $this->handle_sql_error(null, "DB Transaction Already Started By: " . $this->getTransactionOwner(), array("owner" => $owner));
-        }
-        $this->setTransactionRunning(true);
-        $this->setTransactionOwner($owner);
-
-        $this->db->beginTransaction();
-    }
-
-    public function endTransaction($success)
-    {
-        if ($this->isTransactionRunning()) {
-            if ($success) {
-                $this->commit();
-            } else {
-                $this->rollback();
+        foreach ($values as $index => $value) {
+            if (is_array($value)) {  //if $value is array then it have properties like type and length
+                if (count($values[$index]) >= 3) {
+                    //$values[$index][0] => value
+                    //$values[$index][1] => type
+                    //$values[$index][2] => length
+                    $stmt->bindParam($index + 1, $values[$index][0], $values[$index][1], $values[$index][2]);
+                } else {
+                    //$values[$index][0] => value
+                    //$values[$index][1] => type
+                    $stmt->bindParam($index + 1, $values[$index][0], $values[$index][1]);
+                }
+            } else {  // $value is not type of array then it simply contain value
+                //$values[$index][0] => value
+                $stmt->bindParam($index + 1, $values[$index]);
             }
         }
     }
 
-    public function commit()
+    private function handle_sql_error($query, $msg, $extra = null)
     {
-        $this->setTransactionRunning(false);
-        $this->setTransactionOwner("");
-        $this->db->commit();
-
+        $error["query"] = $query;
+        $error["extra"] = $extra;
+        $error["msg"] = $msg;
+//        file_put_contents('error/DB_Errors.json', json_encode($error)."\r\n", FILE_APPEND);
+        echo "<h4 style='color: #FF0000;'>Exception caught</h4>";
+        var_dump($error);
+        die;
     }
 
-    public function rollback()
+    /**
+     * @param $table
+     * @param array $tableValues
+     * @param  $condition
+     * @return int
+     */
+    public function update($table, array $tableValues, $condition)
     {
-        $this->setTransactionRunning(false);
-        $this->setTransactionOwner("");
-        $this->db->rollBack();
-    }
+        $result = 0;
 
-    public function select($query, $params = array(), $fetch_mode = PDO::FETCH_ASSOC)
-    {
-        $results = null;
+        //Create prepare statement from keys of values
+        $query = $this->createUpdatePreparedQuery($table, $tableValues);
+
+        //get column values to bind
+        //later these column values array will merge with where clause bind values if available
+        $parameters = $this->getQueryParamsToBind($tableValues);
+
+
+        $query .= $this->extractWhereClause($condition);
+
+        //both arrays contain only values which will bind
+        //merge column values and condition values
+        $parameters = array_merge($parameters, $this->getQueryParamsToBind($condition));
+
+        $stmt = $this->db->prepare($query);
+        $this->bindParameters($stmt, $parameters);
         try {
-            $stmt = $this->execute($query, $params);
-            if ($stmt->rowCount()) {
-                $results = $stmt->fetchAll($fetch_mode);
-            }
-            $stmt->closeCursor();
+            /*
+                        var_dump($query);
+                        var_dump($parameters);
+                        die();
+            */
+
+            $stmt->execute();
+            $result = $stmt->rowCount();
+
+            //if error then exception will be thrown
+            //If same data updated then rowCount return 0
         } catch (\PDOException $e) {
             $this->handle_sql_error($query, $e);
         }
 
-        return $results;
-    }
-
-    public function execute($query, $params = array())
-    {
-        $stmt = $this->db->prepare($query);
-
-        if (is_array($params) && count($params)) {
-            $stmt->execute($params);
-        } else {
-            $stmt->execute();
-        }
-
-        return $stmt;
+        return $result;
     }
 
     public function createUpdatePreparedQuery($table_name, $values)
@@ -282,28 +226,148 @@ class PDOHelper
     }
 
     /**
-     * @param PDOStatement $stmt
-     * @param array $values
+     * @param $condition
+     * @return string
      */
-    private function bindParameters(PDOStatement $stmt, array $values)
+    private function extractWhereClause($condition)
     {
-        foreach ($values as $index => $value) {
-            if (is_array($value)) {  //if $value is array then it have properties like type and length
-                if (count($values[$index]) >= 3) {
-                    //$values[$index][0] => value
-                    //$values[$index][1] => type
-                    //$values[$index][2] => length
-                    $stmt->bindParam($index + 1, $values[$index][0], $values[$index][1], $values[$index][2]);
-                } else {
-                    //$values[$index][0] => value
-                    //$values[$index][1] => type
-                    $stmt->bindParam($index + 1, $values[$index][0], $values[$index][1]);
-                }
-            } else {  // $value is not type of array then it simply contain value
-                //$values[$index][0] => value
-                $stmt->bindParam($index + 1, $values[$index]);
+        if (isset($condition['where'])) {
+            // concatenate where clause
+            return " WHERE " . $condition['where'];
+        }
+
+        return "";
+    }
+
+    /**
+     * @param string $table
+     * @param $condition
+     * @return int
+     */
+    public function delete($table, $condition)
+    {
+        $result = 0;
+        $query = "DELETE FROM " . $table;
+        $query .= $this->extractWhereClause($condition);
+        $values = $this->getQueryParamsToBind($condition);
+
+        $stmt = $this->db->prepare($query);
+        $this->bindParameters($stmt, $values);
+
+        try {
+            $stmt->execute();
+            $result = $stmt->rowCount();
+        } catch (\PDOException $e) {
+            $this->handle_sql_error($query, $e);
+        }
+
+        return $result;
+    }
+
+    public function beginTransaction($owner = "")
+    {
+        if ($this->isTransactionRunning()) {
+            $this->handle_sql_error(null, "DB Transaction Already Started By: " . $this->getTransactionOwner(), array("owner" => $owner));
+        }
+        $this->setTransactionRunning(true);
+        $this->setTransactionOwner($owner);
+
+        $this->db->beginTransaction();
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isTransactionRunning()
+    {
+        return $this->transactionRunning;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTransactionOwner()
+    {
+        return $this->transactionOwner;
+    }
+
+    /**
+     * @param boolean $transactionRunning
+     */
+    private function setTransactionRunning($transactionRunning)
+    {
+        $this->transactionRunning = $transactionRunning;
+    }
+
+    /**
+     * @param string $transactionOwner
+     */
+    private function setTransactionOwner($transactionOwner)
+    {
+        $this->transactionOwner = $transactionOwner;
+    }
+
+    /**
+     * @param $success
+     * @return mixed
+     */
+    public function endTransaction($success)
+    {
+        if ($this->isTransactionRunning()) {
+            if ($success) {
+                $this->commit();
+            } else {
+                $this->rollback();
             }
         }
+
+        return $success;
+    }
+
+    public function commit()
+    {
+        $this->setTransactionRunning(false);
+        $this->setTransactionOwner("");
+        $this->db->commit();
+
+    }
+
+    public function rollback()
+    {
+        $this->setTransactionRunning(false);
+        $this->setTransactionOwner("");
+        $this->db->rollBack();
+    }
+
+    /*Getter and Setters*/
+
+    public function select($query, $params = array(), $fetch_mode = PDO::FETCH_ASSOC)
+    {
+        $results = null;
+        try {
+            $stmt = $this->execute($query, $params);
+            if ($stmt->rowCount()) {
+                $results = $stmt->fetchAll($fetch_mode);
+            }
+            $stmt->closeCursor();
+        } catch (\PDOException $e) {
+            $this->handle_sql_error($query, $e);
+        }
+
+        return $results;
+    }
+
+    public function execute($query, $params = array())
+    {
+        $stmt = $this->db->prepare($query);
+
+        if (is_array($params) && count($params)) {
+            $stmt->execute($params);
+        } else {
+            $stmt->execute();
+        }
+
+        return $stmt;
     }
 
     public function lastInsertedId()
@@ -319,63 +383,5 @@ class PDOHelper
     public function errorInfo()
     {
         return $this->db->errorInfo();
-    }
-
-    private function handle_sql_error($query, $msg, $extra = null)
-    {
-        $error["query"] = $query;
-        $error["extra"] = $extra;
-        $error["msg"] = $msg;
-//        file_put_contents('error/DB_Errors.json', json_encode($error)."\r\n", FILE_APPEND);
-        echo "<h4 style='color: #FF0000;'>Exception caught</h4>";
-        var_dump($error);
-        die;
-    }
-
-    /*Getter and Setters*/
-    /**
-     * @return boolean
-     */
-    public function isTransactionRunning()
-    {
-        return $this->transactionRunning;
-    }
-
-    /**
-     * @param boolean $transactionRunning
-     */
-    private function setTransactionRunning($transactionRunning)
-    {
-        $this->transactionRunning = $transactionRunning;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTransactionOwner()
-    {
-        return $this->transactionOwner;
-    }
-
-    /**
-     * @param string $transactionOwner
-     */
-    private function setTransactionOwner($transactionOwner)
-    {
-        $this->transactionOwner = $transactionOwner;
-    }
-
-    /**
-     * @param $condition
-     * @return string
-     */
-    private function extractWhereClause($condition)
-    {
-        if (isset($condition['where'])) {
-            // concatenate where clause
-            return " WHERE " . $condition['where'];
-        }
-
-        return "";
     }
 }
