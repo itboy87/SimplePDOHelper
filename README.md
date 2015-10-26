@@ -90,16 +90,16 @@ $tableData = array(
     "?" => $bind_values     //bind values
 );
 $condition = array(
-    "where" => "username = ? and email = ? LIMIT 1", //in where you can add addition clause as well like having or order
+    "condition" => "WHERE username = ? and email = ? LIMIT 1", //in "condition" you can add addition clause as well like having or order
     "?" => array("itboy", "my@mail.com")
 );
 ```
-* `$condition` array just contain two elements first `"where"` and second `"?"`. Don't set `"?"`if there is no "?" in `"where"`.  
-* You can also put `HAVING` and `ORDER` clause in `'where'` like i put `LIMIT 1`.  
-* You cannot insert direct values as array element of `$condition` but you can put in `"where"` element like that
+* `$condition` array just contain two elements first `"condition"` and second `"?"`. Don't set `"?"`if there is no "?" in `"condition"`.
+* You can also put `HAVING` and `ORDER` clause in `'condition'` like i put `LIMIT 1`.
+* You cannot insert direct values as array element of `$condition` but you can put in `"condition"` element like that
 ```php
 $condition = array(
-    "where" => "user_type = 1 and username = ? or email = 'my@mail.com' ",
+    "condition" => "WHERE user_type = 1 and username = ? or email = 'my@mail.com' ",
     "?" => array("itboy", "my@mail.com")
 );
 ```
@@ -111,7 +111,7 @@ $condition_bind = array(
     "my@mail.com"
 );
 $condition = array(
-    "where" => "user_type = 1 and username = ? or email = 'my@mail.com' ",
+    "condition" => "WHERE user_type = 1 and username = ? or email = 'my@mail.com' ",
     "?" => $condition_bind
 );
 ```
@@ -178,7 +178,7 @@ $condition_bind = array(
     "my@mail.com"
 );
 $condition = array(
-    "where" => "user_type = 1 and username = ? or email = 'my@mail.com' ",
+    "condition" => "WHERE user_type = 1 and username = ? or email = 'my@mail.com' ",
     "?" => $condition_bind
 );
 

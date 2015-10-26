@@ -55,7 +55,7 @@ $updateValues = array(
     "?" => $update_bind_params //bind values
 );
 $condition = array(
-    "where" => "username = ? and email = ? LIMIT 1", //in where you can add addition clause as well like having or order
+    "condition" => "WHERE username = ? and email = ? LIMIT 1", //in condition you can add addition clause as well like "HAVING" and "ORDER BY
     "?" => array("itboy", "my@mail.com")
 );
 
