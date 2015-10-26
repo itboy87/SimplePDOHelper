@@ -7,6 +7,7 @@
  */
 
 require_once "PDOHelper.php";
+require_once "TableData.php";
 
 //Bind values @Syntax
 //  $bind_values = array(
@@ -32,6 +33,19 @@ $tableData = array(
     "time" => "NOW()"
 );
 
+//Chain Method Calling
+$TD = new TableData($table_name);
+$TD->putDirectParam("time", "NOW()")
+    ->putBindParam("username", "sabeeh")
+    ->putBindParam("email", "sabeeh@mail.com")
+    ->putBindParam("password", "google", PDO::PARAM_STR, 5)
+    ->putBindParam("user_active", 0, PDO::PARAM_INT);
+
+//condition
+$TD->setCondition("WHERE username = ? && password = ?")
+    ->putConditionBindValue(1, "sabeeh")
+    ->putConditionBindValue(2, "google");
+
 
 /*
 $db_connection = new PDO('mysql:host='.DB_HOST.';dbname='.DATABASE, DB_USER, DB_PASS,$pdo_options);
@@ -40,6 +54,9 @@ $pdo = new PDOHelper($db_connection);
 //PDOHelper object with PDO database connection instance
 $pdo = new PDOHelper(DB::getInstance()); //getInstance return connection of PDO
 
+var_dump($pdo->insertTD($TD));
+var_dump($pdo->updateTD($TD));
+var_dump($pdo->deleteTD($TD));
 
 echo "<h1>Queries</h1>";
 echo "<p><i>\$pdo->insert(\$table_name, \$tableData)</i></p>";

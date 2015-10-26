@@ -29,6 +29,15 @@ class PDOHelper
     }
 
     /**
+     * @param TableData $tableData
+     * @return bool
+     */
+    public function insertTD(TableData $tableData)
+    {
+        return $this->insert($tableData->getTable(), $tableData->getArray());
+    }
+
+    /**
      * insert values in table by
      * @param $table
      * @param array $tableData
@@ -149,6 +158,15 @@ class PDOHelper
     }
 
     /**
+     * @param TableData $tableData
+     * @return int
+     */
+    public function updateTD(TableData $tableData)
+    {
+        return $this->update($tableData->getTable(), $tableData->getArray(), $tableData->getCondition());
+    }
+
+    /**
      * @param $table
      * @param array $tableValues
      * @param  $condition
@@ -162,11 +180,11 @@ class PDOHelper
         $query = $this->createUpdatePreparedQuery($table, $tableValues);
 
         //get column values to bind
-        //later these column values array will merge with where clause bind values if available
+        //later these column values array will merge with "condition" clause bind values if available
         $parameters = $this->getQueryParamsToBind($tableValues);
 
 
-        $query .= $this->extractWhereClause($condition);
+        $query .= $this->extractConditionClause($condition);
 
         //both arrays contain only values which will bind
         //merge column values and condition values
@@ -229,14 +247,23 @@ class PDOHelper
      * @param $condition
      * @return string
      */
-    private function extractWhereClause($condition)
+    private function extractConditionClause($condition)
     {
-        if (isset($condition['where'])) {
-            // concatenate where clause
-            return " WHERE " . $condition['where'];
+        if (isset($condition['condition'])) {
+            // concatenate condition clause
+            return " " . $condition['condition'];
         }
 
         return "";
+    }
+
+    /**
+     * @param TableData $tableData
+     * @return int
+     */
+    public function deleteTD(TableData $tableData)
+    {
+        return $this->delete($tableData->getTable(), $tableData->getCondition());
     }
 
     /**
@@ -248,7 +275,7 @@ class PDOHelper
     {
         $result = 0;
         $query = "DELETE FROM " . $table;
-        $query .= $this->extractWhereClause($condition);
+        $query .= $this->extractConditionClause($condition);
         $values = $this->getQueryParamsToBind($condition);
 
         $stmt = $this->db->prepare($query);

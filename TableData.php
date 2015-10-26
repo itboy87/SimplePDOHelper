@@ -9,51 +9,137 @@
 class TableData
 {
     private $values = array();
+    private $condition = null;
+    private $table;
 
-    public function putDirectParam($key, $value)
+    /**
+     * TableData constructor.
+     * @param $table
+     */
+    public function __construct($table)
     {
-        $this->values[$key] = $value;
+        $this->table = $table;
     }
 
-    public function putBindParam($key, $value)
+
+    /**
+     * @param $column
+     * @param $value
+     * @return $this
+     */
+    public function putDirectParam($column, $value)
     {
-        $this->values["?"][$key] = $value;
+        $this->values[$column] = $value;
+        return $this;
     }
 
-    public function getDirectParam($key)
+    /**
+     * @param string $column
+     * @param $value
+     * @param int $dataType
+     * @param int $length
+     * @return $this
+     */
+    public function putBindParam($column, $value, $dataType = null, $length = null)
     {
-        return $this->values[$key];
+        if ($dataType === null && $length === null)
+            $this->values["?"][$column] = $value;
+        elseif ($dataType !== null)
+            $this->values["?"][$column] = array($value, $dataType);
+        else
+            $this->values["?"][$column] = array($value, $dataType, $length);
+
+        return $this;
     }
 
-    public function getBindParam($key)
+    /**
+     * $position value start from 1 not from 0
+     *
+     * @param int $position
+     * @param $value
+     * @param int $dataType
+     * @param int $length
+     * @return $this
+     */
+    public function putConditionBindValue($position, $value, $dataType = null, $length = null)
     {
-        return $this->values["?"][$key];
+        $index = $position - 1;
+        if ($dataType === null && $length === null)
+            $this->condition["?"][$index] = $value;
+        elseif ($dataType !== null)
+            $this->condition["?"][$index] = array($value, $dataType);
+        else
+            $this->condition["?"][$index] = array($value, $dataType, $length);
+
+        return $this;
     }
 
-    public function containDirectParam($key)
+    public function removeConditionBindValue($position)
     {
-        return isset($this->values[$key]);
-    }
-
-    public function containBindParam($key)
-    {
-        return isset($this->values["?"][$key]);
-    }
-
-    public function removeDirectParam($key)
-    {
-        if (isset($this->values[$key])) {
-            unset($this->values[$key]);
+        $index = $position - 1;
+        if (isset($this->condition["?"][$index])) {
+            unset($this->condition["?"][$index]);
             return true;
         }
 
         return false;
     }
 
-    public function removeBindParam($key)
+    public function removeCondition()
     {
-        if (isset($this->values["?"][$key])) {
-            unset($this->values["?"][$key]);
+        if (isset($this->condition['condition'])) {
+            $this->condition = null;
+            return true;
+        }
+
+        return false;
+    }
+
+    public function getCondition()
+    {
+        return $this->condition;
+    }
+
+    public function setCondition($condition)
+    {
+        $this->condition["condition"] = $condition;
+        return $this;
+    }
+
+    public function getDirectParam($column)
+    {
+        return $this->values[$column];
+    }
+
+    public function getBindParam($column)
+    {
+        return $this->values["?"][$column];
+    }
+
+    public function containDirectParam($column)
+    {
+        return isset($this->values[$column]);
+    }
+
+    public function containBindParam($column)
+    {
+        return isset($this->values["?"][$column]);
+    }
+
+    public function removeDirectParam($column)
+    {
+        if (isset($this->values[$column])) {
+            unset($this->values[$column]);
+            return true;
+        }
+
+        return false;
+    }
+
+    public function removeBindParam($column)
+    {
+        if (isset($this->values["?"][$column])) {
+            unset($this->values["?"][$column]);
             return true;
         }
 
@@ -70,18 +156,26 @@ class TableData
         return count($this->values);
     }
 
-    public function getAsDBInsertQuery($table_name)
-    {
-//        return DB::createPrepareInsertQuery($table_name,$this->getArray());
-    }
-
     public function getArray()
     {
         return $this->values;
     }
 
-    public function getQueryParamsToBind()
+    /**
+     * @return mixed
+     */
+    public function getTable()
     {
-//        return DB::getQueryParamsToBind($this->getArray());
+        return $this->table;
+    }
+
+    /**
+     * @param mixed $table
+     * @return $this
+     */
+    public function setTable($table)
+    {
+        $this->table = $table;
+        return $this;
     }
 }
