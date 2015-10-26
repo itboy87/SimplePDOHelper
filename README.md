@@ -40,10 +40,10 @@ $tableData = array(
 );
 ```  
 
-- **Don't worry about parameters order PDOHelper will handle it just give right value to right column.**  
+**Don't worry about parameters order PDOHelper will handle it just give right value to right column.**   
 - '*?*' array values will bind in prepared statement
 - above `$tableData` variable is same as below query  
- ```php
+```php
 INSERT INTO TABLE_NAME (username, email, time)` VALUES(?, ?, NOW())
 ```
 
@@ -61,7 +61,7 @@ $tableData = array(
     "email"     => "'my@mail.com'"          //this value will include direct into query
 );
 ```
-1. first i put email column value in `$tableData` array instead `$bind_values` now it will not bind and directl entered into email column
+1. first i put email column value in `$tableData` array instead `$bind_values` now it will not bind and directly entered into email column
    this will work but this is not good method it can lead to sql injection google it for more information.
 2. I changed `username` value to `array (column_value, PDO::DATA_TYPE, length)`. You can use PDO data types and set length of value
 3. `"user_active"` is bit type column in DB if you direct insert value into it you will get exception so i set its type to `PDO::PARAM_INT`.
@@ -101,7 +101,19 @@ $condition = array(
 $condition = array(
     "where" => "user_type = 1 and username = ? or email = 'my@mail.com' ",
     "?" => array("itboy", "my@mail.com")
-););
+);
+```
+* You can also set PDO data type and length of `$condition` bind values
+```php
+//without any key but if you provide them these will skipped
+$condition_bind = array(
+    array("itboy", PDO::PARAM_STR, 6),
+    "my@mail.com"
+);
+$condition = array(
+    "where" => "user_type = 1 and username = ? or email = 'my@mail.com' ",
+    "?" => $condition_bind
+);
 ```
 
 ###Delete Row
@@ -132,4 +144,58 @@ Functions
   $pdo->commit();
   $pdo->rollback();
   ..
+```
+
+### Full Example
+```php
+//Create PDOHelper object
+$db_connection = new PDO('mysql:host='.DB_HOST.';dbname='.DATABASE, DB_USER, DB_PASS,$pdo_options); 
+$pdo = new PDOHelper($db_connection);
+
+//table name
+$table_name = "test";
+
+//create table data variable
+$bind_values = array(
+    "username" => "itboy",                                //simple value
+    "email" => "my@mail.com",                            //simple value
+    "password" => array("myPass", PDO::PARAM_STR, 6),    //value to bind with type and length
+    "user_active" => array(1, PDO::PARAM_INT)           // this column is type of BIT(1) and will bind with int type
+);
+$tableData = array(
+    "?"             => $bind_values,
+    "time"          => "NOW()",       //Direct value
+    "user_type"     =>  1            //Direct value
+);
+
+//insert
+$pdo->insert($table_name, $tableData);
+
+//Create $condition variable for update and delete
+//without any key but if you provide them these will skipped
+$condition_bind = array(
+    array("itboy", PDO::PARAM_STR, 6),
+    "my@mail.com"
+);
+$condition = array(
+    "where" => "user_type = 1 and username = ? or email = 'my@mail.com' ",
+    "?" => $condition_bind
+);
+
+//update
+$pdo->$update($table_name, $tableData, $condition);
+
+//delete
+$pdo->$delete($table_name, $condition);
+
+//Transaction
+$pdo->beginTransaction("testOwner");  //owner string is optional
+
+$outUpdate = $pdo->$update($table_name, $tableData, $condition);
+$outDelete = $pdo->$delete($table_name, $condition);
+$outInsert = $pdo->insert($table_name, $tableData);
+
+// transaction will auto commit if success else it will rollback
+$pdo->endTransaction($outUpdate && $outDelete && $outInsert);
+
 ```
